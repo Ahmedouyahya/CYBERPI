@@ -1,0 +1,17 @@
+[Unit]
+Description=CyberPI Auto-Attack
+After=local-fs.target
+DefaultDependencies=no
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/cyberpi-run
+RemainAfterExit=yes
+StandardOutput=journal
+StandardError=journal
+Environment=PYTHONUNBUFFERED=1
+Restart=no
+TimeoutStartSec=120
+
+[Install]
+WantedBy=multi-user.target

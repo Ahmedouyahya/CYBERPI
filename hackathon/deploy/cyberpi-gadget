@@ -1,0 +1,88 @@
+#!/bin/bash
+# CyberPI — USB Composite Gadget Setup
+# Creates: HID keyboard (/dev/hidg0) + mass storage (USB flash drive)
+set -euo pipefail
+
+GADGET_DIR="/sys/kernel/config/usb_gadget/cyberpi"
+USB_IMAGE="/piusb.bin"
+MOUNT_POINT="/mnt/usb_share"
+
+teardown() {
+    [[ -d "$GADGET_DIR" ]] || return 0
+    echo "" > "$GADGET_DIR/UDC" 2>/dev/null || true
+    for link in "$GADGET_DIR"/configs/*/hid.usb0 "$GADGET_DIR"/configs/*/mass_storage.usb0; do
+        [[ -L "$link" ]] && rm -f "$link"
+    done
+    for d in "$GADGET_DIR"/configs/*/strings/0x0409 "$GADGET_DIR"/strings/0x0409; do
+        [[ -d "$d" ]] && rmdir "$d" 2>/dev/null || true
+    done
+    for d in "$GADGET_DIR"/configs/*; do [[ -d "$d" ]] && rmdir "$d" 2>/dev/null || true; done
+    for d in "$GADGET_DIR"/functions/*; do [[ -d "$d" ]] && rmdir "$d" 2>/dev/null || true; done
+    [[ -d "$GADGET_DIR" ]] && rmdir "$GADGET_DIR" 2>/dev/null || true
+}
+
+setup() {
+    modprobe libcomposite 2>/dev/null || true
+    modprobe dwc2         2>/dev/null || true
+
+    [[ -d "$GADGET_DIR" ]] && teardown
+
+    # Mount image if needed
+    mkdir -p "$MOUNT_POINT"
+    mountpoint -q "$MOUNT_POINT" 2>/dev/null || mount -o loop "$USB_IMAGE" "$MOUNT_POINT" || true
+
+    # Unmount loopback before giving it to mass_storage
+    # (mass_storage needs exclusive access to the image file)
+    umount "$MOUNT_POINT" 2>/dev/null || true
+
+    mkdir -p "$GADGET_DIR"
+
+    # Identifiers — looks like a generic flash drive
+    echo "0x0951" > "$GADGET_DIR/idVendor"    # Kingston Technology
+    echo "0x1666" > "$GADGET_DIR/idProduct"   # DataTraveler
+    echo "0x0100" > "$GADGET_DIR/bcdDevice"
+    echo "0x0200" > "$GADGET_DIR/bcdUSB"
+
+    mkdir -p "$GADGET_DIR/strings/0x0409"
+    echo "012345678901"   > "$GADGET_DIR/strings/0x0409/serialnumber"
+    echo "Kingston"       > "$GADGET_DIR/strings/0x0409/manufacturer"
+    echo "DataTraveler"   > "$GADGET_DIR/strings/0x0409/product"
+
+    # HID keyboard
+    mkdir -p "$GADGET_DIR/functions/hid.usb0"
+    echo 1 > "$GADGET_DIR/functions/hid.usb0/protocol"
+    echo 1 > "$GADGET_DIR/functions/hid.usb0/subclass"
+    echo 8 > "$GADGET_DIR/functions/hid.usb0/report_length"
+    echo -ne '\x05\x01\x09\x06\xa1\x01\x05\x07\x19\xe0\x29\xe7\x15\x00\x25\x01\x75\x01\x95\x08\x81\x02\x95\x01\x75\x08\x81\x03\x95\x05\x75\x01\x05\x08\x19\x01\x29\x05\x91\x02\x95\x01\x75\x03\x91\x03\x95\x06\x75\x08\x15\x00\x25\x65\x05\x07\x19\x00\x29\x65\x81\x00\xc0' \
+        > "$GADGET_DIR/functions/hid.usb0/report_desc"
+
+    # Mass storage
+    mkdir -p "$GADGET_DIR/functions/mass_storage.usb0/lun.0"
+    echo 1              > "$GADGET_DIR/functions/mass_storage.usb0/stall"
+    echo 0              > "$GADGET_DIR/functions/mass_storage.usb0/lun.0/cdrom"
+    echo 0              > "$GADGET_DIR/functions/mass_storage.usb0/lun.0/ro"
+    echo 0              > "$GADGET_DIR/functions/mass_storage.usb0/lun.0/nofua"
+    echo "$USB_IMAGE"   > "$GADGET_DIR/functions/mass_storage.usb0/lun.0/file"
+
+    # Bind
+    mkdir -p "$GADGET_DIR/configs/c.1/strings/0x0409"
+    echo "DataTraveler" > "$GADGET_DIR/configs/c.1/strings/0x0409/configuration"
+    echo 250            > "$GADGET_DIR/configs/c.1/MaxPower"
+
+    ln -sf "$GADGET_DIR/functions/hid.usb0"          "$GADGET_DIR/configs/c.1/"
+    ln -sf "$GADGET_DIR/functions/mass_storage.usb0"  "$GADGET_DIR/configs/c.1/"
+
+    # Enable
+    local udc
+    udc=$(ls /sys/class/udc/ 2>/dev/null | head -1)
+    [[ -z "$udc" ]] && { echo "No UDC found!"; exit 1; }
+    echo "$udc" > "$GADGET_DIR/UDC"
+
+    echo "Gadget active: HID=/dev/hidg0  Storage=$USB_IMAGE"
+}
+
+case "${1:-setup}" in
+    setup)    setup    ;;
+    teardown) teardown ;;
+    *)        echo "Usage: $0 [setup|teardown]" ;;
+esac

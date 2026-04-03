@@ -1,0 +1,55 @@
+#!/bin/bash
+# ============================================================================
+#  CyberPI Auto-Run — called by systemd on boot
+# ============================================================================
+set -uo pipefail
+
+INSTALL_DIR="/opt/cyberpi"
+MOUNT_POINT="/mnt/usb_share"
+LOG="/var/log/cyberpi.log"
+PYTHON="$INSTALL_DIR/venv/bin/python3"
+ATTACK="$INSTALL_DIR/hackathon/auto_attack_v2.py"
+
+log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" >> "$LOG"; }
+
+log "=== CyberPI STARTED ==="
+
+# 1. Set up gadget
+log "Setting up USB gadget..."
+/usr/local/bin/cyberpi-gadget setup >> "$LOG" 2>&1
+
+# 2. Wait for /dev/hidg0 to appear
+for i in $(seq 1 30); do
+    [[ -c /dev/hidg0 ]] && break
+    sleep 0.5
+done
+
+if [[ ! -c /dev/hidg0 ]]; then
+    log "ERROR: /dev/hidg0 never appeared — aborting"
+    exit 1
+fi
+log "HID device ready: /dev/hidg0"
+
+# 3. Small extra delay for host to enumerate
+sleep 2
+
+# 4. Re-mount the image so our Python code can read the layout hint
+mkdir -p "$MOUNT_POINT"
+mount -o loop,ro /piusb.bin "$MOUNT_POINT" 2>/dev/null || true
+
+# 5. Run the v2 attack engine
+log "Launching attack engine..."
+export PYTHONPATH="$INSTALL_DIR/src:$INSTALL_DIR:$INSTALL_DIR/hackathon"
+
+"$PYTHON" "$ATTACK" \
+    --mount "$MOUNT_POINT" \
+    --hid /dev/hidg0 \
+    --layout auto \
+    --wait-enum 4 \
+    --os-timeout 12 \
+    --payload-timeout 90 \
+    >> "$LOG" 2>&1
+
+EXIT_CODE=$?
+log "Attack engine exited with code $EXIT_CODE"
+log "=== CyberPI COMPLETED ==="
