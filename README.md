@@ -13,19 +13,20 @@
 
 1. [How It Works](#how-it-works)
 2. [What Gets Extracted](#what-gets-extracted)
-3. [Hardware Requirements](#hardware-requirements)
-4. [Setup — Step by Step](#setup--step-by-step)
-5. [Running an Attack](#running-an-attack)
-6. [Extracting the Data](#extracting-the-data)
+3. [Phone Support](#phone-support)
+4. [Hardware Requirements](#hardware-requirements)
+5. [Setup — Step by Step](#setup--step-by-step)
+6. [Running an Attack](#running-an-attack)
+7. [Extracting the Data](#extracting-the-data)
    - [Method 1 — viewer.py (SSH)](#method-1--viewerpy-recommended)
    - [Method 2 — sd_reader.py (SD card)](#method-2--sd_readerpy-pull-the-sd-card)
    - [Method 3 — Manual (mount + browse)](#method-3--manual-mount--browse)
-7. [Multi-Target / Continuous Mode](#multi-target--continuous-mode)
-8. [Advanced Options](#advanced-options)
-9. [Project Structure](#project-structure)
-10. [Defense Recommendations](#defense-recommendations)
-11. [Troubleshooting](#troubleshooting)
-12. [Legal Notice](#legal-notice)
+8. [Multi-Target / Continuous Mode](#multi-target--continuous-mode)
+9. [Advanced Options](#advanced-options)
+10. [Project Structure](#project-structure)
+11. [Defense Recommendations](#defense-recommendations)
+12. [Troubleshooting](#troubleshooting)
+13. [Legal Notice](#legal-notice)
 
 ---
 
@@ -132,6 +133,83 @@
 | SSH private keys | `~/.ssh/` |
 | System info | Users, network, running services |
 
+### Android *(limited — see [Phone Support](#phone-support))*
+| Data | Requirement |
+|------|-------------|
+| Device info, model, Android version | No root needed |
+| Installed apps list | No root needed |
+| Contacts, SMS, call log | Termux with permissions |
+| Wi-Fi passwords | **Root required** |
+| Browser data (Chrome) | **Root required** |
+| Network info | No root needed |
+
+---
+
+## Phone Support
+
+### Android — Partial
+
+CyberPI has an Android attack mode but it works very differently from PC attacks and comes with real limitations.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                   ANDROID ATTACK FLOW                           │
+│                                                                 │
+│  Pi plugged into phone via USB                                  │
+│         │                                                       │
+│         ▼                                                       │
+│  Phone shows "Allow access to USB storage?" popup               │
+│         │                                                       │
+│         ├── User taps ALLOW ──► USB drive mounted               │
+│         │                            │                          │
+│         │                            ▼                          │
+│         │             Pi injects HID → searches for Termux      │
+│         │                            │                          │
+│         │              ┌─────────────┴──────────────┐           │
+│         │              │                            │           │
+│         │         Termux found               Termux NOT found   │
+│         │              │                            │           │
+│         │              ▼                            ▼           │
+│         │     android_payload.sh          Chrome fingerprint    │
+│         │     runs → collects data        (basic device info)   │
+│         │                                                       │
+│         └── User taps DENY ──► attack aborted                   │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+| Condition | What happens |
+|-----------|-------------|
+| Screen unlocked | ✅ Attack proceeds |
+| Screen locked | ❌ Aborted — same as PC |
+| Termux installed | ✅ Full payload runs (device info, contacts, SMS, apps) |
+| No Termux | ⚠️ Falls back to Chrome device fingerprinting only |
+| User taps "Allow" on USB popup | ✅ Drive mounts, payload can save data |
+| User taps "Deny" on USB popup | ❌ No data saved to drive |
+| Root access | ✅ Also gets Wi-Fi passwords + browser logins |
+| No root (stock phone) | ❌ Wi-Fi passwords and browser data are blocked by Android |
+
+**Key difference from PC:** On Android 6+, the phone shows a permission popup when a USB drive is connected. The user must tap "Allow" for the drive to mount. This means the attack is **not fully silent** on Android.
+
+To force Android mode (skip OS auto-detection):
+```bash
+python3 core/auto_attack.py --force-os android
+```
+
+---
+
+### iOS (iPhone / iPad) — Not Supported
+
+CyberPI does **not** work on iPhones or iPads. Apple's security model blocks every part of the attack:
+
+| Blocker | Why |
+|---------|-----|
+| No USB mass storage | iOS never exposes the filesystem over USB |
+| HID accessories require pairing | The phone shows "Trust this computer?" — requires a manual tap and PIN |
+| No accessible terminal | No command execution possible without jailbreak |
+| Strict app sandboxing | No cross-app data access |
+
+There is no iOS payload in this project. It is not planned.
+
 ---
 
 ## Hardware Requirements
@@ -227,9 +305,9 @@ The Pi is now ready. **Unplug the power cable.** The device will run automatical
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     ATTACK FLOW                             │
+│                ATTACK FLOW — PC (Windows/macOS/Linux)       │
 │                                                             │
-│  1. Target computer must be ON and screen UNLOCKED          │
+│  1. Target must be ON and screen UNLOCKED                   │
 │                                                             │
 │  2. Plug the Pi DATA port into the target USB port          │
 │        Pi DATA port = the one closest to HDMI               │
@@ -245,6 +323,8 @@ The Pi is now ready. **Unplug the power cable.** The device will run automatical
 ```
 
 > If the screen is locked, the Pi detects it via a canary file check and **does nothing** — no keystrokes are injected.
+
+For Android phones, see [Phone Support](#phone-support) — the flow is different and requires user interaction.
 
 ---
 
