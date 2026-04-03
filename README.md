@@ -34,40 +34,40 @@
 
 ```
 ╔══════════════════════════════════════════════════════════════════════╗
-║                        CYBERPI — FULL FLOW                          ║
+║                        CYBERPI — FULL FLOW                           ║
 ╠══════════════════════════════════════════════════════════════════════╣
 ║                                                                      ║
-║  ┌─────────────────┐   USB cable   ┌──────────────────────────┐     ║
-║  │  Pi Zero W      │ ────────────► │  Target Computer         │     ║
-║  │                 │               │  (Windows / macOS /      │     ║
-║  │  appears as:    │               │   Linux / Android)       │     ║
-║  │  • USB keyboard │               └──────────────────────────┘     ║
+║  ┌─────────────────┐   USB cable   ┌──────────────────────────┐      ║
+║  │  Pi Zero W      │ ────────────► │  Target Computer         │      ║
+║  │                 │               │  (Windows / macOS /      │      ║
+║  │  appears as:    │               │   Linux / Android)       │      ║
+║  │  • USB keyboard │               └──────────────────────────┘      ║
 ║  │  • Flash drive  │                           │                     ║
 ║  └────────┬────────┘                           │                     ║
 ║           │                                    ▼                     ║
-║           │   ┌─────────────────────────────────────────────────┐   ║
-║           │   │              ATTACK SEQUENCE                    │   ║
-║           │   │                                                 │   ║
-║           │   │  [0s]  Pi boots → USB gadget created            │   ║
-║           │   │  [6s]  Host enumerates: sees "Kingston Drive"   │   ║
-║           │   │  [8s]  OS detected via filesystem artefacts     │   ║
-║           │   │  [9s]  Screen-lock check (canary file)          │   ║
-║           │   │  [10s] Hidden terminal opened via HID injection │   ║
-║           │   │  [12s] Payload launches from the flash drive    │   ║
-║           │   │  [30s] Browser DBs + Wi-Fi + SSH keys collected │   ║
-║           │   │  [32s] DPAPI / Keychain decryption runs         │   ║
-║           │   │  [35s] AES-256-GCM encrypts all data on drive   │   ║
-║           │   │  [36s] LED blinks 5× → unplug                  │   ║
-║           │   └─────────────────────────────────────────────────┘   ║
+║           │   ┌─────────────────────────────────────────────────┐    ║
+║           │   │              ATTACK SEQUENCE                    │    ║
+║           │   │                                                 │    ║
+║           │   │  [0s]  Pi boots → USB gadget created            │    ║
+║           │   │  [6s]  Host enumerates: sees "Kingston Drive"   │    ║
+║           │   │  [8s]  OS detected via filesystem artefacts     │    ║
+║           │   │  [9s]  Screen-lock check (canary file)          │    ║
+║           │   │  [10s] Hidden terminal opened via HID injection │    ║
+║           │   │  [12s] Payload launches from the flash drive    │    ║
+║           │   │  [30s] Browser DBs + Wi-Fi + SSH keys collected │    ║
+║           │   │  [32s] DPAPI / Keychain decryption runs         │    ║
+║           │   │  [35s] AES-256-GCM encrypts all data on drive   │    ║
+║           │   │  [36s] LED blinks 5× → unplug                   │    ║
+║           │   └─────────────────────────────────────────────────┘    ║
 ║           │                                                          ║
 ║           ▼                                                          ║
-║  ┌─────────────────────────────────────────────────────────────┐    ║
-║  │               DATA EXTRACTION (3 methods)                   │    ║
-║  │                                                             │    ║
-║  │  A) SSH into Pi → run viewer.py  (easiest)                  │    ║
-║  │  B) Pull SD card → run sd_reader.py  (offline)              │    ║
-║  │  C) Mount /piusb.bin manually → browse files  (raw)         │    ║
-║  └─────────────────────────────────────────────────────────────┘    ║
+║  ┌─────────────────────────────────────────────────────────────┐     ║
+║  │               DATA EXTRACTION (3 methods)                   │     ║
+║  │                                                             │     ║
+║  │  A) SSH into Pi → run viewer.py  (easiest)                  │     ║
+║  │  B) Pull SD card → run sd_reader.py  (offline)              │     ║
+║  │  C) Mount /piusb.bin manually → browse files  (raw)         │     ║
+║  └─────────────────────────────────────────────────────────────┘     ║
 ╚══════════════════════════════════════════════════════════════════════╝
 ```
 
@@ -315,7 +315,7 @@ The Pi is now ready. **Unplug the power cable.** The device will run automatical
 │  3. Target sees a "Kingston DataTraveler" flash drive       │
 │        (nothing suspicious, no driver install needed)       │
 │                                                             │
-│  4. Wait for the LED to blink 5 times (~30–60 seconds)     │
+│  4. Wait for the LED to blink 5 times (~30–60 seconds)      │
 │        No LED? Wait a full 60 seconds to be safe            │
 │                                                             │
 │  5. Unplug                                                  │
@@ -475,8 +475,8 @@ CyberPI supports attacking multiple devices **without resetting** — each attac
 │  [36s → unplug]          [36s → unplug]          [36s → unplug] │
 │       │                       │                       │         │
 │       ▼                       ▼                       ▼         │
-│  targets/                targets/                targets/        │
-│  DESKTOP-A1_...          MacBook_...             ubuntu_...      │
+│  targets/                targets/                targets/       │
+│  DESKTOP-A1_...          MacBook_...             ubuntu_...     │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -651,7 +651,7 @@ This tool is for **authorized penetration testing and security education only**.
 
 ## Author
 
-**Ahmed Ouyahya (Mr.D137)**
+**Ahmedouyahya (Mr.D)**
 
 ## License
 
