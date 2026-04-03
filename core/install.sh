@@ -4,7 +4,7 @@
 #
 #  Run this ONCE on a fresh Raspberry Pi Zero W with Raspberry Pi OS Lite:
 #
-#     sudo bash hackathon/install.sh
+#     sudo bash core/install.sh
 #
 #  After reboot, the Pi is ready.  Plug it into ANY unlocked computer
 #  and it will automatically:
@@ -50,7 +50,7 @@ cat << 'ART'
        |___/
 ART
 echo -e "${N}"
-echo -e "${Y}  One-command installer — Hackathon Edition${N}"
+echo -e "${Y}  One-command installer${N}"
 echo -e "${R}  AUTHORIZED PENETRATION TESTING ONLY${N}"
 echo ""
 
@@ -70,13 +70,13 @@ mkdir -p "$INSTALL_DIR"
 
 # Copy project files
 cp -r "$PROJECT_ROOT/src"       "$INSTALL_DIR/src"
-cp -r "$SCRIPT_DIR"/*           "$INSTALL_DIR/hackathon/" 2>/dev/null || true
-mkdir -p "$INSTALL_DIR/hackathon/payloads"
-cp "$SCRIPT_DIR/auto_attack_v2.py"                   "$INSTALL_DIR/hackathon/"
-cp "$SCRIPT_DIR/viewer.py"                           "$INSTALL_DIR/hackathon/"
-cp "$SCRIPT_DIR/payloads/windows_payload_v2.ps1"     "$INSTALL_DIR/hackathon/payloads/"
-cp "$SCRIPT_DIR/payloads/macos_payload_v2.sh"        "$INSTALL_DIR/hackathon/payloads/"
-chmod +x "$INSTALL_DIR/hackathon/payloads/macos_payload_v2.sh"
+cp -r "$SCRIPT_DIR"/*           "$INSTALL_DIR/core/" 2>/dev/null || true
+mkdir -p "$INSTALL_DIR/core/payloads"
+cp "$SCRIPT_DIR/auto_attack.py"                   "$INSTALL_DIR/core/"
+cp "$SCRIPT_DIR/viewer.py"                        "$INSTALL_DIR/core/"
+cp "$SCRIPT_DIR/payloads/windows_payload.ps1"     "$INSTALL_DIR/core/payloads/"
+cp "$SCRIPT_DIR/payloads/macos_payload.sh"        "$INSTALL_DIR/core/payloads/"
+chmod +x "$INSTALL_DIR/core/payloads/macos_payload.sh"
 
 # Python venv
 python3 -m venv "$INSTALL_DIR/venv"
@@ -145,9 +145,9 @@ ok "USB drive mounted at $MOUNT_POINT"
 info "Step 5/8: Deploying payloads to USB drive..."
 
 # Copy v2 payloads
-cp "$INSTALL_DIR/hackathon/payloads/windows_payload_v2.ps1" \
+cp "$INSTALL_DIR/core/payloads/windows_payload.ps1" \
    "$MOUNT_POINT/windows_payload.ps1"
-cp "$INSTALL_DIR/hackathon/payloads/macos_payload_v2.sh" \
+cp "$INSTALL_DIR/core/payloads/macos_payload.sh" \
    "$MOUNT_POINT/macos_payload.sh"
 chmod +x "$MOUNT_POINT/macos_payload.sh"
 
@@ -264,7 +264,7 @@ cat > /usr/local/bin/cyberpi-run << 'RUNNER'
 #  Flow:
 #    1. cyberpi-gadget creates HID+storage USB device
 #    2. This script waits for host enumeration
-#    3. Launches auto_attack_v2.py which handles:
+#    3. Launches auto_attack.py which handles:
 #       - OS detection (multi-signal, polling)
 #       - Screen-lock check (canary file)
 #       - HID keyboard injection (layout-aware)
@@ -278,7 +278,7 @@ INSTALL_DIR="/opt/cyberpi"
 MOUNT_POINT="/mnt/usb_share"
 LOG="/var/log/cyberpi.log"
 PYTHON="$INSTALL_DIR/venv/bin/python3"
-ATTACK="$INSTALL_DIR/hackathon/auto_attack_v2.py"
+ATTACK="$INSTALL_DIR/core/auto_attack.py"
 
 log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" >> "$LOG"; }
 
@@ -311,7 +311,7 @@ mount -o loop,ro /piusb.bin "$MOUNT_POINT" 2>/dev/null || true
 
 # 5. Run the v2 attack engine
 log "Launching attack engine..."
-export PYTHONPATH="$INSTALL_DIR/src:$INSTALL_DIR:$INSTALL_DIR/hackathon"
+export PYTHONPATH="$INSTALL_DIR/src:$INSTALL_DIR:$INSTALL_DIR/core"
 
 "$PYTHON" "$ATTACK" \
     --mount "$MOUNT_POINT" \
@@ -411,7 +411,7 @@ echo ""
 echo -e "  ${B}To view results:${N}"
 echo -e "    SSH into the Pi and run:"
 echo -e "    sudo mount -o loop /piusb.bin /mnt/usb_share"
-echo -e "    $INSTALL_DIR/venv/bin/python3 $INSTALL_DIR/hackathon/viewer.py /mnt/usb_share"
+echo -e "    $INSTALL_DIR/venv/bin/python3 $INSTALL_DIR/core/viewer.py /mnt/usb_share"
 echo ""
 echo -e "  ${Y}To change keyboard layout:${N}"
 echo -e "    Edit /mnt/usb_share/.kb_layout  (us / fr / de)"
