@@ -1,4 +1,4 @@
-# CyberPI — $10 USB Penetration Testing Device
+# CyberPI — USB Penetration Testing Device
 
 > **Plug it in. Walk away. Get credentials.**
 >
